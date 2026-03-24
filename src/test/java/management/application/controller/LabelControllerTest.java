@@ -81,8 +81,8 @@ public class LabelControllerTest {
                 .andReturn();
 
         JsonNode root = objectMapper.readTree(mvcResult.getResponse().getContentAsString());
-        LabelDto[] actual = objectMapper.readValue(
-                root.get("content").toString(), LabelDto[].class);
+        LabelDto[] actual = objectMapper.readValue(root.get("content").toString(),
+                LabelDto[].class);
 
         assertEquals(expectedSize, actual.length);
     }
