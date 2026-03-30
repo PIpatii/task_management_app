@@ -15,6 +15,7 @@ import management.application.service.dropbox.DropBoxService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -25,6 +26,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     private final AttachmentMapper attachmentMapper;
 
     @Override
+    @Transactional
     public AttachmentDto createAttachment(MultipartFile file, Long taskId) {
         Attachment attachment = new Attachment();
         attachment.setFileName(file.getOriginalFilename());
@@ -61,6 +63,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Override
+    @Transactional
     public void deleteAttachment(Long id) {
         Attachment attachment = attachmentRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Attachment not found"));

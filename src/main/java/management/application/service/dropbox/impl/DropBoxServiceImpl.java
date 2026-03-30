@@ -8,6 +8,7 @@ import com.dropbox.core.v2.files.DeleteErrorException;
 import com.dropbox.core.v2.files.DownloadBuilder;
 import com.dropbox.core.v2.files.FileMetadata;
 import java.io.OutputStream;
+import management.application.exception.DropBoxException;
 import management.application.properties.DropBoxProperties;
 import management.application.requester.JavaHttpClientRequestor;
 import management.application.service.dropbox.DropBoxService;
@@ -49,7 +50,7 @@ public class DropBoxServiceImpl implements DropBoxService {
                     .uploadAndFinish(file.getInputStream());
             return metadata.getId();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload file from Dropbox", e);
+            throw new DropBoxException("Failed to upload file to Dropbox", e);
         }
     }
 
@@ -60,7 +61,7 @@ public class DropBoxServiceImpl implements DropBoxService {
                     client.files().downloadBuilder(fileId);
             downloader.download(output);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download file from Dropbox: " + fileId, e);
+            throw new DropBoxException("Failed to download file from Dropbox: " + fileId, e);
         }
     }
 
@@ -74,9 +75,9 @@ public class DropBoxServiceImpl implements DropBoxService {
 
                 return;
             }
-            throw new RuntimeException("Failed to delete file from Dropbox: " + fileId, e);
+            throw new DropBoxException("Failed to delete file from Dropbox: " + fileId, e);
         } catch (DbxException e) {
-            throw new RuntimeException("Dropbox delete error", e);
+            throw new DropBoxException("Dropbox delete error", e);
         }
     }
 }

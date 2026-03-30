@@ -1,5 +1,6 @@
 package management.application.service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 import management.application.dto.comment.AddCommentRequestDto;
@@ -19,6 +20,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import static management.application.helper.TestDataHelper.createAddCommentRequestDto;
+import static management.application.helper.TestDataHelper.createComment;
+import static management.application.helper.TestDataHelper.createCommentDto;
+import static management.application.helper.TestDataHelper.createUser;
 import static management.application.helper.TestSecurityUtils.mockAuth;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doNothing;
@@ -40,13 +45,11 @@ public class CommentServiceTest {
     @Test
     @DisplayName("get task's comments by task id")
     public void getCommentsByTaskId_success() {
-        Comment firstComment = new Comment();
-        firstComment.setId(1L);
-        firstComment.setTaskId(1L);
+        Comment firstComment = createComment(1L, 1L, 1L,
+                "text", LocalDateTime.now());
 
-        Comment secondComment = new Comment();
-        secondComment.setId(2L);
-        secondComment.setTaskId(1L);
+        Comment secondComment = createComment(2L, 1L, 1L,
+                "text", LocalDateTime.now());
 
         int expectedSize = 2;
 
@@ -62,23 +65,16 @@ public class CommentServiceTest {
     public void addComment_success() {
         mockAuth("email");
 
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("email");
+        User user = createUser(1L, "email", "password",
+                "firstName", "lastName");
 
-        AddCommentRequestDto requestDto = new AddCommentRequestDto();
-        requestDto.setTaskId(1L);
-        requestDto.setText("text");
+        AddCommentRequestDto requestDto = createAddCommentRequestDto(1L, "text");
 
-        Comment comment = new Comment();
-        comment.setId(1L);
-        comment.setTaskId(requestDto.getTaskId());
-        comment.setText(requestDto.getText());
+        Comment comment = createComment(1L, requestDto.getTaskId(), 1L,
+                requestDto.getText(), LocalDateTime.now());
 
-        CommentDto expected = new CommentDto();
-        expected.setId(comment.getId());
-        expected.setTaskId(comment.getTaskId());
-        expected.setText(comment.getText());
+        CommentDto expected = createCommentDto(comment.getId(), comment.getTaskId(),
+                comment.getUserId(), comment.getText(), comment.getTimestamp());
 
         when(userRepository.getUserByEmail("email")).thenReturn(user);
         when(commentMapper.toEntity(requestDto)).thenReturn(comment);
@@ -96,22 +92,18 @@ public class CommentServiceTest {
     public void deleteComment_success() {
         mockAuth("email");
 
-        Long commentId = 1L;
+        User user = createUser(1L, "email", "password",
+                "firstName", "lastName");
 
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("email");
-
-        Comment comment = new Comment();
-        comment.setId(commentId);
-        comment.setUserId(user.getId());
+        Comment comment = createComment(1L, 1L, 1L,
+                "text", LocalDateTime.now());
 
         when(userRepository.getUserByEmail("email")).thenReturn(user);
-        when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
+        when(commentRepository.findById(comment.getId())).thenReturn(Optional.of(comment));
 
-        doNothing().when(commentRepository).deleteById(commentId);
-        commentService.deleteComment(commentId);
+        doNothing().when(commentRepository).deleteById(comment.getId());
+        commentService.deleteComment(comment.getId());
 
-        verify(commentRepository, times(1)).deleteById(commentId);
+        verify(commentRepository, times(1)).deleteById(comment.getId());
     }
 }

@@ -2,7 +2,6 @@ package management.application.service.notification;
 
 import com.sendgrid.Method;
 import com.sendgrid.Request;
-import com.sendgrid.Response;
 import com.sendgrid.SendGrid;
 import com.sendgrid.helpers.mail.Mail;
 import com.sendgrid.helpers.mail.objects.Content;
@@ -33,11 +32,7 @@ public class EmailService {
             request.setMethod(Method.POST);
             request.setEndpoint("mail/send");
             request.setBody(mail.build());
-            Response response = sg.api(request);
-
-            System.out.println("SENDGRID STATUS: " + response.getStatusCode());
-            System.out.println("SENDGRID BODY: " + response.getBody());
-            System.out.println("SENDGRID HEADERS: " + response.getHeaders());
+            sg.api(request);
 
         } catch (IOException e) {
             throw new RuntimeException(e);

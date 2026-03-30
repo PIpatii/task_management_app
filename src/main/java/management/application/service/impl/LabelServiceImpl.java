@@ -12,6 +12,7 @@ import management.application.service.LabelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +26,13 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
+    @Transactional
     public LabelDto createLabel(CreateLabelRequestDto requestDto) {
         return labelMapper.toDto(labelRepository.save(labelMapper.toEntity(requestDto)));
     }
 
     @Override
+    @Transactional
     public LabelDto updateLabel(UpdateLabelRequestDto requestDto, Long id) {
         Label label = labelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Label not found"));
@@ -39,6 +42,7 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
+    @Transactional
     public void deleteLabel(Long id) {
         labelRepository.deleteById(id);
     }

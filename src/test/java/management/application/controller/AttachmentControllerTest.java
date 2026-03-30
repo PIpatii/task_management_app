@@ -1,31 +1,43 @@
 package management.application.controller;
 
-import jakarta.servlet.http.HttpServletResponse;
-import java.util.Arrays;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.sql.DataSource;
+import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
+import lombok.SneakyThrows;
 import management.application.dto.attachment.AttachmentDto;
-import management.application.service.AttachmentService;
+import management.application.service.dropbox.DropBoxService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.multipart.MultipartFile;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,53 +46,80 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AttachmentControllerTest {
     protected static MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockBean
-    private AttachmentService attachmentService;
+    private DropBoxService dropBoxService;
 
     @BeforeEach
-    public void beforeEach(@Autowired WebApplicationContext webApplicationContext) {
+    public void beforeEach(@Autowired DataSource dataSource,
+                           @Autowired WebApplicationContext webApplicationContext) throws SQLException {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
+        teardown(dataSource);
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection,
+                    new ClassPathResource("database/attachment/add-two-elements-to-attachments-table.sql"));
+        }
+    }
+
+    @AfterEach
+    public void afterAll(@Autowired DataSource dataSource) {
+        teardown(dataSource);
+    }
+
+    @SneakyThrows
+    static void teardown(DataSource dataSource) {
+        try (Connection connection = dataSource.getConnection()) {
+            connection.setAutoCommit(true);
+            ScriptUtils.executeSqlScript(connection,
+                    new ClassPathResource("database/attachment/remove-all-elements-from-attachments-table.sql"));
+        }
     }
 
     @WithMockUser(username = "email", roles = "USER")
     @Test
     @DisplayName("get all task's attachments")
     public void getAttachments_success() throws Exception {
-        AttachmentDto firstAttachment = new AttachmentDto();
-        firstAttachment.setId(1L);
-        firstAttachment.setFileName("file1");
+        int expectedSize = 2;
 
-        AttachmentDto secondAttachment = new AttachmentDto();
-        secondAttachment.setId(2L);
-        secondAttachment.setFileName("file2");
-
-
-        Page<AttachmentDto> page = new PageImpl<>(Arrays.asList(firstAttachment, secondAttachment));
-
-        when(attachmentService.getAttachments(eq(10L), any(Pageable.class)))
-                .thenReturn(page);
-
-        mockMvc.perform(get("/attachments")
-                        .param("taskId", "10")
-                        .param("page", "0")
-                        .param("size", "10"))
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/attachments")
+                                .param("taskId", "1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[0].id").value(1));
+                .andReturn();
 
-        verify(attachmentService).getAttachments(eq(10L), any(Pageable.class));
+        JsonNode root = objectMapper.readTree(mvcResult.getResponse().getContentAsString());
+        AttachmentDto[] actual = objectMapper.readValue(
+                root.get("content").toString(), AttachmentDto[].class);
+
+        assertEquals(expectedSize, actual.length);
+
     }
 
     @WithMockUser(username = "email", roles = "USER")
     @Test
     @DisplayName("download a file from dropbox")
     public void downloadFile_success() throws Exception {
-        mockMvc.perform(get("/attachments/{id}/download", 5L))
-                .andExpect(status().isOk());
+        byte[] fileBytes = "Hello world".getBytes();
 
-        verify(attachmentService).downloadFile(eq(5L), any(HttpServletResponse.class));
+        doAnswer(invocation -> {
+            OutputStream os = invocation.getArgument(1);
+            os.write(fileBytes);
+            return null;
+        }).when(dropBoxService).downloadFile(eq("id:123456"), any());
+
+        mockMvc.perform(get("/attachments/" + 1 + "/download"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "text/plain"))
+                .andExpect(header().string("Content-Disposition",
+                        "attachment; filename=\"test.txt\""))
+                .andExpect(content().bytes(fileBytes));
+
     }
 
     @WithMockUser(username = "admin", roles = "ADMIN")
@@ -91,33 +130,26 @@ public class AttachmentControllerTest {
                 "file",
                 "test.txt",
                 "text/plain",
-                "hello".getBytes()
+                "Hello world".getBytes()
         );
-
-        AttachmentDto dto = new AttachmentDto();
-        dto.setId(1L);
-        dto.setFileName("test.txt");
-
-        when(attachmentService.createAttachment(any(MultipartFile.class), eq(5L)))
-                .thenReturn(dto);
+        when(dropBoxService.uploadFile(file)).thenReturn("id:123456");
 
         mockMvc.perform(multipart("/attachments")
                         .file(file)
-                        .param("taskId", "5"))
+                        .param("taskId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.fileName").value("test.txt"));
-
-        verify(attachmentService).createAttachment(any(MultipartFile.class), eq(5L));
+                .andExpect(jsonPath("$.fileName").value("test.txt"))
+                .andExpect(jsonPath("$.contentType").value("text/plain"));
     }
 
     @WithMockUser(username = "admin", roles = "ADMIN")
     @Test
     @DisplayName("delete an attachment by id")
     public void deleteAttachments_success() throws Exception {
-        mockMvc.perform(delete("/attachments/{id}", 1L))
-                .andExpect(status().isNoContent());
+        doNothing().when(dropBoxService)
+                .deleteFile("id:123456");
 
-        verify(attachmentService).deleteAttachment(1L);
+        mockMvc.perform(delete("/attachments/{id}" ,1L ))
+                .andExpect(status().isNoContent());
     }
 }

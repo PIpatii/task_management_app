@@ -24,6 +24,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import static management.application.helper.TestDataHelper.createCreateLabelRequestDto;
+import static management.application.helper.TestDataHelper.createUpdateLabelRequestDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -91,9 +93,7 @@ public class LabelControllerTest {
     @Test
     @DisplayName("create a label")
     public void createLabel_success() throws Exception {
-        CreateLabelRequestDto requestDto = new CreateLabelRequestDto();
-        requestDto.setColor("yellow");
-        requestDto.setName("orange");
+        CreateLabelRequestDto requestDto = createCreateLabelRequestDto("orange","yellow");
 
         MvcResult mvcResult = mockMvc
                         .perform(post("/labels")
@@ -113,9 +113,7 @@ public class LabelControllerTest {
     @Test
     @DisplayName("update a label by id")
     public void updateLabel_success() throws Exception {
-        UpdateLabelRequestDto requestDto = new UpdateLabelRequestDto();
-        requestDto.setColor("yellow");
-        requestDto.setName("orange");
+        UpdateLabelRequestDto requestDto =createUpdateLabelRequestDto("orange","yellow");
 
         MvcResult mvcResult = mockMvc
                         .perform(put("/labels/{id}", 1L)

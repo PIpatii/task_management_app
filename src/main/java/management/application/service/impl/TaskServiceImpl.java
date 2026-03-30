@@ -12,6 +12,7 @@ import management.application.service.TaskService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional
     public TaskDto createTask(CreateTaskRequestDto requestDto) {
         Task task = taskMapper.toEntity(requestDto);
         task.setStatus(Task.Status.NOT_STARTED);
@@ -41,6 +43,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional
     public TaskDto updateTask(UpdateTaskRequestDto requestDto, Long projectId) {
         Task task = taskRepository.findById(projectId)
                 .orElseThrow(() -> new EntityNotFoundException("Task not found"));
@@ -50,6 +53,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional
     public void deleteTask(Long id) {
         taskRepository.deleteById(id);
     }

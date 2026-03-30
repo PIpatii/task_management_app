@@ -1,11 +1,11 @@
 package management.application.service;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Optional;
 import management.application.dto.project.CreateProjectRequestDto;
 import management.application.dto.project.ProjectDto;
 import management.application.dto.project.UpdateProjectRequestDto;
-import management.application.helper.TestSecurityUtils;
 import management.application.mapper.ProjectMapper;
 import management.application.model.Project;
 import management.application.model.User;
@@ -21,6 +21,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import static management.application.helper.TestDataHelper.createCreateProjectRequestDto;
+import static management.application.helper.TestDataHelper.createProject;
+import static management.application.helper.TestDataHelper.createProjectDto;
+import static management.application.helper.TestDataHelper.createUpdateProjectRequestDto;
+import static management.application.helper.TestDataHelper.createUser;
+import static management.application.helper.TestSecurityUtils.mockAuth;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -43,18 +49,16 @@ public class ProjectServiceTest {
     @Test
     @DisplayName("get all user's projects")
     public void getProjects_success() {
-        TestSecurityUtils.mockAuth("email");
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("email");
+        mockAuth("email");
 
-        Project firstProject = new Project();
-        firstProject.setId(1L);
-        firstProject.setName("First Project");
+        User user = createUser(1L, "email", "password",
+                "firstName", "lastName");
 
-        Project secondProject = new Project();
-        secondProject.setId(1L);
-        secondProject.setName("Second Project");
+        Project firstProject = createProject(1L, "First project", "description", LocalDate.now(),
+                                LocalDate.now().plusMonths(1), 1L);
+
+        Project secondProject = createProject(2L, "Second project", "description", LocalDate.now(),
+                LocalDate.now().plusMonths(1), 1L);
 
         int expectedSize = 2;
 
@@ -69,13 +73,11 @@ public class ProjectServiceTest {
     @Test
     @DisplayName("get a project by id")
     public void getProjectById_success() {
-        Project project = new Project();
-        project.setId(1L);
-        project.setName("First Project");
+        Project project = createProject(1L, "First project", "description", LocalDate.now(),
+                LocalDate.now().plusMonths(1), 1L);
 
-        ProjectDto expected = new ProjectDto();
-        expected.setId(project.getId());
-        expected.setName("First Project");
+        ProjectDto expected = createProjectDto(project.getId(), project.getName(), project.getDescription(),
+                project.getStartDate(), project.getEndDate(), project.getStatus().name(), project.getAssigneeId());
 
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
         when(projectMapper.toDto(project)).thenReturn(expected);
@@ -89,19 +91,14 @@ public class ProjectServiceTest {
     @Test
     @DisplayName("create a project")
     public void createProject_success() {
-        CreateProjectRequestDto requestDto = new CreateProjectRequestDto();
-        requestDto.setName("First Project");
-        requestDto.setDescription("Description");
+        CreateProjectRequestDto requestDto = createCreateProjectRequestDto("project", "description",
+                LocalDate.now(), LocalDate.now().plusMonths(1), 1L);
 
-        Project project = new Project();
-        project.setId(1L);
-        project.setName(requestDto.getName());
-        project.setDescription(requestDto.getDescription());
+        Project project = createProject(1L, requestDto.getName(), requestDto.getDescription(),
+                requestDto.getStartDate(), requestDto.getEndDate(), requestDto.getAssigneeId());
 
-        ProjectDto expected = new ProjectDto();
-        expected.setId(project.getId());
-        expected.setName(project.getName());
-        expected.setDescription(project.getDescription());
+        ProjectDto expected = createProjectDto(project.getId(), project.getName(), project.getDescription(),
+                project.getStartDate(), project.getEndDate(), project.getStatus().name(), project.getAssigneeId());
 
         when(projectMapper.toEntity(requestDto)).thenReturn(project);
         when(projectRepository.save(project)).thenReturn(project);
@@ -117,16 +114,13 @@ public class ProjectServiceTest {
     @Test
     @DisplayName("update a project by id")
     public void updateProject_success() {
-        UpdateProjectRequestDto requestDto = new UpdateProjectRequestDto();
-        requestDto.setStatus("IN_PROGRESS");
+        UpdateProjectRequestDto requestDto = createUpdateProjectRequestDto("INITIATED");
 
-        Project project = new Project();
-        project.setId(1L);
-        project.setStatus(Project.Status.valueOf(requestDto.getStatus()));
+        Project project = createProject(1L, "project", "description",
+                LocalDate.now(), LocalDate.now().plusMonths(1), 1L);
 
-        ProjectDto expected = new ProjectDto();
-        expected.setId(project.getId());
-        expected.setStatus(project.getStatus().name());
+        ProjectDto expected = createProjectDto(project.getId(), project.getName(), project.getDescription(),
+                project.getStartDate(), project.getEndDate(), project.getStatus().name(), project.getAssigneeId());
 
         when(projectRepository.findById(1L)).thenReturn(Optional.of(project));
         doAnswer(invocation -> {

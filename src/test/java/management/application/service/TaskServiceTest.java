@@ -1,7 +1,9 @@
 package management.application.service;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import management.application.dto.task.CreateTaskRequestDto;
 import management.application.dto.task.TaskDto;
 import management.application.dto.task.UpdateTaskRequestDto;
@@ -18,6 +20,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import static management.application.helper.TestDataHelper.createCreateTaskRequestDto;
+import static management.application.helper.TestDataHelper.createTask;
+import static management.application.helper.TestDataHelper.createTaskDto;
+import static management.application.helper.TestDataHelper.createUpdateTaskRequestDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -38,14 +44,11 @@ public class TaskServiceTest {
     @Test
     @DisplayName("get all project's tasks")
     public void getTasks_success() {
-        Task firstTask = new Task();
-        firstTask.setId(1L);
-        firstTask.setProjectId(1L);
+        Task firstTask = createTask(1L, "task", "description",
+                LocalDate.now().plusMonths(1), 1L, 1L);
 
-        Task secondTask = new Task();
-        secondTask.setId(2L);
-        secondTask.setProjectId(1L);
-
+        Task secondTask = createTask(2L, "task", "description",
+                LocalDate.now().plusMonths(1), 1L, 1L);
         int expectedSize = 2;
 
         when(taskRepository.getTasksByProjectId(1L, PageRequest.of(0, 10)))
@@ -58,15 +61,12 @@ public class TaskServiceTest {
     @Test
     @DisplayName("get a task by id")
     public void getTaskById_success() {
-        Task task = new Task();
-        task.setId(1L);
-        task.setName("task");
-        task.setProjectId(1L);
+        Task task = createTask(1L, "task", "description",
+                LocalDate.now().plusMonths(1), 1L, 1L);
 
-        TaskDto expected = new TaskDto();
-        expected.setId(expected.getId());
-        expected.setName("task");
-        expected.setProjectId(expected.getProjectId());
+        TaskDto expected = createTaskDto(task.getId(), task.getName(), task.getDescription(),
+                task.getStatus().name(), task.getDeadline(), task.getPriority().name(),
+                task.getProjectId(), task.getAssigneeId());
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskMapper.toDto(task)).thenReturn(expected);
@@ -80,19 +80,16 @@ public class TaskServiceTest {
     @Test
     @DisplayName("create a task")
     public void createTask_success() {
-        CreateTaskRequestDto requestDto = new CreateTaskRequestDto();
-        requestDto.setProjectId(1L);
-        requestDto.setName("task");
+        CreateTaskRequestDto requestDto = createCreateTaskRequestDto("task", "description",
+                LocalDate.now().plusMonths(1), "LOW",1L, 1L, Set.of(1L));
 
-        Task task = new Task();
-        task.setId(1L);
-        task.setName(requestDto.getName());
-        task.setProjectId(requestDto.getProjectId());
+        Task task = createTask(1L, requestDto.getName(), requestDto.getDescription(),
+                requestDto.getDeadline(), requestDto.getProjectId(), requestDto.getAssigneeId());
 
-        TaskDto expected = new TaskDto();
-        expected.setId(task.getId());
-        expected.setName(task.getName());
-        expected.setProjectId(task.getProjectId());
+        TaskDto expected = createTaskDto(task.getId(), task.getName(), task.getDescription(),
+                task.getStatus().name(), task.getDeadline(), task.getPriority().name(),
+                task.getProjectId(), task.getAssigneeId());
+
         when(taskMapper.toEntity(requestDto)).thenReturn(task);
         when(taskRepository.save(task)).thenReturn(task);
         when(taskMapper.toDto(task)).thenReturn(expected);
@@ -107,19 +104,14 @@ public class TaskServiceTest {
     @Test
     @DisplayName("update a task by id")
     public void updateTask_success() {
-        UpdateTaskRequestDto requestDto = new UpdateTaskRequestDto();
-        requestDto.setStatus("IN_PROGRESS");
-        requestDto.setPriority("HIGH");
+        UpdateTaskRequestDto requestDto = createUpdateTaskRequestDto("IN_PROGRESS", "LOW");
 
-        Task task = new Task();
-        task.setId(1L);
-        task.setStatus(Task.Status.valueOf(requestDto.getStatus()));
-        task.setPriority(Task.Priority.valueOf(requestDto.getPriority()));
+        Task task = createTask(1L,"task", "description",
+                LocalDate.now().plusMonths(1),1L, 1L);
 
-        TaskDto expected = new TaskDto();
-        expected.setId(task.getId());
-        expected.setStatus(task.getStatus().name());
-        expected.setPriority(task.getPriority().name());
+        TaskDto expected = createTaskDto(task.getId(), task.getName(), task.getDescription(),
+                task.getStatus().name(), task.getDeadline(), task.getPriority().name(),
+                task.getProjectId(), task.getAssigneeId());
 
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         doAnswer(invocation -> {

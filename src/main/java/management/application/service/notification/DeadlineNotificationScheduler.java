@@ -21,12 +21,10 @@ public class DeadlineNotificationScheduler {
         LocalDate tomorrow = LocalDate.now();
 
         List<Task> tasks = taskRepository.findByDeadline(tomorrow);
-        System.out.println("tasks: " + tasks);
-        System.out.println("Method has been called");
         for (Task task : tasks) {
             notificationService.notifyUser(
                     userRepository.getUserById(task.getAssigneeId()),
-                    "Нагадування: завтра дедлайн задачі \"" + task.getName() + "\""
+                    "Reminder the deadline is soon: \"" + task.getName() + "\""
             );
         }
     }

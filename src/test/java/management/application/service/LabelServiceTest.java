@@ -18,6 +18,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import static management.application.helper.TestDataHelper.createCreateLabelRequestDto;
+import static management.application.helper.TestDataHelper.createLabel;
+import static management.application.helper.TestDataHelper.createLabelDto;
+import static management.application.helper.TestDataHelper.createUpdateLabelRequestDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -38,15 +42,9 @@ public class LabelServiceTest {
     @Test
     @DisplayName("get all labels")
     public void getAllLabels_success() {
-        Label firstLabel = new Label();
-        firstLabel.setId(1L);
-        firstLabel.setName("First Label");
-        firstLabel.setColor("red");
+        Label firstLabel = createLabel(1L, "First label", "red");
 
-        Label secondLabel = new Label();
-        secondLabel.setId(2L);
-        secondLabel.setName("Second Label");
-        secondLabel.setColor("green");
+        Label secondLabel =createLabel(2L, "Second label", "green");
 
         int expectedSize = 2;
 
@@ -59,47 +57,31 @@ public class LabelServiceTest {
     @Test
     @DisplayName("create a label")
     public void createLabel_success() {
-        CreateLabelRequestDto requestDto = new CreateLabelRequestDto();
-        requestDto.setName("First Label");
-        requestDto.setColor("red");
+        CreateLabelRequestDto requestDto = createCreateLabelRequestDto("label", "red");
 
-        Label label = new Label();
-        label.setId(1L);
-        label.setName(requestDto.getName());
-        label.setColor(requestDto.getColor());
+        Label label = createLabel(1L, requestDto.getName(), requestDto.getColor());
 
-        LabelDto labelDto = new LabelDto();
-        labelDto.setId(label.getId());
-        labelDto.setName(label.getName());
-        labelDto.setColor(label.getColor());
+        LabelDto expected = createLabelDto(label.getId(), label.getName(), label.getColor());
 
         when(labelMapper.toEntity(requestDto)).thenReturn(label);
         when(labelRepository.save(label)).thenReturn(label);
-        when(labelMapper.toDto(label)).thenReturn(labelDto);
+        when(labelMapper.toDto(label)).thenReturn(expected);
 
         LabelDto actual = labelService.createLabel(requestDto);
 
-        assertEquals(labelDto.getId(), actual.getId());
-        assertEquals(labelDto.getName(), actual.getName());
-        assertEquals(labelDto.getColor(), actual.getColor());
+        assertEquals(expected.getId(), actual.getId());
+        assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getColor(), actual.getColor());
     }
 
     @Test
     @DisplayName("update a label by id")
     public void updateLabel_success() {
-        UpdateLabelRequestDto requestDto = new UpdateLabelRequestDto();
-        requestDto.setName("First Label");
-        requestDto.setColor("red");
+        UpdateLabelRequestDto requestDto = createUpdateLabelRequestDto("label", "red");
 
-        Label label = new Label();
-        label.setId(1L);
-        label.setName("updated First Label");
-        label.setColor("green");
+        Label label = createLabel(1L, requestDto.getName(), requestDto.getColor());
 
-        LabelDto expected = new LabelDto();
-        expected.setId(label.getId());
-        expected.setName(label.getName());
-        expected.setColor(label.getColor());
+        LabelDto expected = createLabelDto(label.getId(), label.getName(), label.getColor());
 
         when(labelRepository.findById(1L)).thenReturn(Optional.of(label));
         doAnswer(invocation -> {

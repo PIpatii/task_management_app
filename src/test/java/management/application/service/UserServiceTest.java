@@ -20,6 +20,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import static management.application.helper.TestDataHelper.createRole;
+import static management.application.helper.TestDataHelper.createUpdateProfileRequestDto;
+import static management.application.helper.TestDataHelper.createUpdateRoleRequestDto;
+import static management.application.helper.TestDataHelper.createUser;
+import static management.application.helper.TestDataHelper.createUserDto;
+import static management.application.helper.TestDataHelper.createUserRegistrationRequestDto;
+import static management.application.helper.TestDataHelper.createUserRegistrationResponseDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static management.application.helper.TestSecurityUtils.mockAuth;
 import static org.mockito.Mockito.any;
@@ -45,24 +52,16 @@ public class UserServiceTest {
     @Test
     @DisplayName("user registration")
     public void register_success() {
-        UserRegistrationRequestDto requestDto = new UserRegistrationRequestDto();
-        requestDto.setPassword("password");
-        requestDto.setRepeatPassword("password");
-        requestDto.setEmail("email");
+        UserRegistrationRequestDto requestDto = createUserRegistrationRequestDto("email", "password",
+                "password", "lastName", "firstName");
 
-        Role role = new Role();
-        role.setId(1L);
-        role.setName(Role.RoleName.USER);
+        Role role = createRole(1L,  Role.RoleName.USER);
 
-        User user = new User();
-        user.setId(1L);
-        user.setEmail(requestDto.getEmail());
-        user.setPassword("encodedPassword");
-        user.setRoles(Set.of(role));
+        User user = createUser(1L, "email", "password",
+                "firstName", "lastName");
 
-        UserRegistrationResponseDto expected = new UserRegistrationResponseDto();
-        expected.setId(user.getId());
-        expected.setEmail(user.getEmail());
+        UserRegistrationResponseDto expected = createUserRegistrationResponseDto(user.getId(), user.getEmail(),
+                user.getFirstName(), user.getLastName());
 
         when(userRepository.findByEmail("email")).thenReturn(Optional.empty());
         when(userMapper.toEntity(requestDto)).thenReturn(user);
@@ -82,13 +81,10 @@ public class UserServiceTest {
     public void getProfileInfo_success() {
         mockAuth("email");
 
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("email");
+        User user = createUser(1L, "email", "password",
+                "firstName", "lastName");
 
-        UserDto expected = new UserDto();
-        expected.setEmail("email");
-
+        UserDto expected = createUserDto(user.getEmail(), user.getFirstName(), user.getLastName());
 
         when(userRepository.getUserByEmail("email")).thenReturn(user);
         when(userRepository.getUserById(1L)).thenReturn(user);
@@ -104,21 +100,13 @@ public class UserServiceTest {
     public void updateProfileInfo_success() {
         mockAuth("email");
 
-        UpdateProfileRequestDto requestDto = new UpdateProfileRequestDto();
-        requestDto.setEmail("email");
-        requestDto.setFirstName("updated firstName");
-        requestDto.setLastName("updated lastName");
+        UpdateProfileRequestDto requestDto = createUpdateProfileRequestDto("email",
+                "updated lastName", "updated firstName");
 
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("email");
-        user.setFirstName(requestDto.getFirstName());
-        user.setLastName(requestDto.getLastName());
+        User user = createUser(1L, requestDto.getEmail(), "password",
+                requestDto.getFirstName(), requestDto.getLastName());
 
-        UserDto expected = new UserDto();
-        expected.setEmail(user.getEmail());
-        expected.setFirstName(user.getFirstName());
-        expected.setLastName(user.getLastName());
+        UserDto expected =  createUserDto(user.getEmail(), user.getFirstName(), user.getLastName());
 
         when(userRepository.getUserByEmail("email")).thenReturn(user);
         when(userRepository.getUserById(1L)).thenReturn(user);
@@ -144,21 +132,14 @@ public class UserServiceTest {
     @Test
     @DisplayName("update user's role")
     public void updateRole_success() {
-        UpdateRoleRequestDto requestDto = new UpdateRoleRequestDto();
-        requestDto.setRoleIds(Set.of(1L));
+        UpdateRoleRequestDto requestDto = createUpdateRoleRequestDto(Set.of(1L));
 
-        Role role = new Role();
-        role.setId(1L);
-        role.setName(Role.RoleName.USER);
+        Role role = createRole(1L,  Role.RoleName.USER);
 
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("email");
-        user.setRoles(Set.of(role));
+        User user = createUser(1L, "email", "password",
+                "updated lastName", "updated firstName");
 
-        UserDto expected = new UserDto();
-        expected.setEmail(user.getEmail());
-        expected.setRoleIds(Set.of(role.getId()));
+        UserDto expected =  createUserDto(user.getEmail(), user.getFirstName(), user.getLastName());
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(roleRepository.findRoleById(1L)).thenReturn(role);

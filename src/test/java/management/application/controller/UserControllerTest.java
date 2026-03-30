@@ -24,9 +24,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import static management.application.helper.TestDataHelper.createUpdateProfileRequestDto;
+import static management.application.helper.TestDataHelper.createUpdateRoleRequestDto;
+import static management.application.helper.TestDataHelper.createUserDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -68,10 +73,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("get user's profile info")
     public void getProfileInfo_success() throws Exception {
-        UserDto expected = new UserDto();
-        expected.setEmail("email");
-        expected.setFirstName("firstName");
-        expected.setLastName("lastName");
+        UserDto expected = createUserDto("email","firstName", "lastName");;
 
         MvcResult mvcResult = mockMvc
                                 .perform(get("/users")
@@ -91,10 +93,8 @@ public class UserControllerTest {
     @Test
     @DisplayName("update user's profile info")
     public void updateProfileInfo_success() throws Exception {
-        UpdateProfileRequestDto requestDto = new UpdateProfileRequestDto();
-        requestDto.setFirstName("firstName");
-        requestDto.setLastName("lastName");
-        requestDto.setEmail("email");
+        UpdateProfileRequestDto requestDto = createUpdateProfileRequestDto("email",
+                "lastName", "firstName");
 
         MvcResult mvcResult = mockMvc
                 .perform(put("/users")
@@ -115,8 +115,7 @@ public class UserControllerTest {
     @Test
     @DisplayName("update user's role")
     public void updateRole_success() throws Exception {
-        UpdateRoleRequestDto requestDto = new UpdateRoleRequestDto();
-        requestDto.setRoleIds(Set.of(2L));
+        UpdateRoleRequestDto requestDto = createUpdateRoleRequestDto(Set.of(2L));
 
         MvcResult mvcResult = mockMvc
                 .perform(put("/users/{id}/roles", 2L)

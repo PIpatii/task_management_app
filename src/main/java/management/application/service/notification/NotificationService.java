@@ -13,7 +13,7 @@ public class NotificationService {
         if (user.getEmail() != null) {
             emailService.send(
                     user.getEmail(),
-                    "Нагадування про дедлайн",
+                    "a reminder about deadline",
                     message
             );
         }

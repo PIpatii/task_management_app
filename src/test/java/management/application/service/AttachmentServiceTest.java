@@ -1,6 +1,7 @@
 package management.application.service;
 
 import java.io.OutputStream;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 import management.application.dto.attachment.AttachmentDto;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
+import static management.application.helper.TestDataHelper.createAttachment;
+import static management.application.helper.TestDataHelper.createAttachmentDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,26 +52,23 @@ public class AttachmentServiceTest {
 
         when(dropBoxService.uploadFile(file)).thenReturn("dropbox123");
 
-        Attachment savedAttachment = new Attachment();
-        savedAttachment.setId(1L);
-        savedAttachment.setFileName("test.pdf");
-        savedAttachment.setContentType("management/application/pdf");
-        savedAttachment.setDropboxFileId("dropbox123");
-        savedAttachment.setTaskId(10L);
+        Attachment savedAttachment = createAttachment(1L, 10L, "test.pdf", "dropbox123",
+                        LocalDateTime.now(), "management/application/pdf");
 
         when(attachmentRepository.save(any(Attachment.class)))
                 .thenReturn(savedAttachment);
 
-        AttachmentDto dto = new AttachmentDto();
-        dto.setId(1L);
-        dto.setFileName("test.pdf");
+        AttachmentDto expected = createAttachmentDto(1L, 10L, "test.pdf", "dropbox123",
+                LocalDateTime.now(), "management/application/pdf");
 
-        when(attachmentMapper.toDto(savedAttachment)).thenReturn(dto);
+        when(attachmentMapper.toDto(savedAttachment)).thenReturn(expected);
 
         AttachmentDto result = attachmentService.createAttachment(file, 10L);
 
-        assertEquals(1L, result.getId());
-        assertEquals("test.pdf", result.getFileName());
+        assertEquals(expected.getId(), result.getId());
+        assertEquals(expected.getFileName(), result.getFileName());
+        assertEquals(expected.getContentType(), result.getContentType());
+        assertEquals(expected.getTaskId(), result.getTaskId());
 
         verify(dropBoxService).uploadFile(file);
         verify(attachmentRepository).save(any(Attachment.class));
@@ -78,13 +78,11 @@ public class AttachmentServiceTest {
     @Test
     @DisplayName("get all attachments by task id")
     public void getAttachmentsByTaskId_success() {
-        Attachment firstAttachment = new Attachment();
-        firstAttachment.setId(1L);
-        firstAttachment.setTaskId(1L);
+        Attachment firstAttachment = createAttachment(1L, 10L, "test.pdf", "dropbox123",
+                LocalDateTime.now(), "management/application/pdf");
 
-        Attachment secondAttachment = new Attachment();
-        secondAttachment.setId(2L);
-        secondAttachment.setTaskId(1L);
+        Attachment secondAttachment = createAttachment(2L, 10L, "test.pdf", "dropbox123",
+                LocalDateTime.now(), "management/application/pdf");
 
         int expectedSize = 2;
 
@@ -98,11 +96,8 @@ public class AttachmentServiceTest {
     @Test
     @DisplayName("download a file from Dropbox")
     public void downloadFileById_success() {
-        Attachment attachment = new Attachment();
-        attachment.setId(1L);
-        attachment.setFileName("test.pdf");
-        attachment.setContentType("management/application/pdf");
-        attachment.setDropboxFileId("dropbox123");
+        Attachment attachment = createAttachment(1L, 10L, "test.pdf", "dropbox123",
+                LocalDateTime.now(), "management/application/pdf");
 
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(attachment));
 
@@ -122,16 +117,14 @@ public class AttachmentServiceTest {
     @Test
     @DisplayName("delete an attachment by id")
     public void deleteAttachment_correctData_success_() {
-        Attachment attachment = new Attachment();
-        attachment.setId(1L);
-        attachment.setFileName("test.pdf");
-        attachment.setDropboxFileId("12345");
+        Attachment attachment = createAttachment(1L, 10L, "test.pdf", "dropbox123",
+                LocalDateTime.now(), "management/application/pdf");
 
         when(attachmentRepository.findById(1L)).thenReturn(Optional.of(attachment));
         doNothing().when(attachmentRepository).deleteById(1L);
         attachmentService.deleteAttachment(1L);
 
-        verify(dropBoxService).deleteFile("12345");
+        verify(dropBoxService).deleteFile("dropbox123");
         verify(attachmentRepository, times(1)).deleteById(1L);
     }
 }

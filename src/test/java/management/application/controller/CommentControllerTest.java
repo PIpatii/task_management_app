@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import lombok.SneakyThrows;
 import management.application.dto.comment.AddCommentRequestDto;
 import management.application.dto.comment.CommentDto;
+import management.application.helper.TestDataHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -90,9 +91,7 @@ public class CommentControllerTest {
     @Test
     @DisplayName("add comment to a task")
     public void addComment_success() throws Exception {
-        AddCommentRequestDto request = new AddCommentRequestDto();
-        request.setTaskId(1L);
-        request.setText("Hello world");
+        AddCommentRequestDto request = TestDataHelper.createAddCommentRequestDto(1L, "Hello world");
 
         MvcResult mvcResult = mockMvc.perform(post("/comments")
                         .contentType(MediaType.APPLICATION_JSON)

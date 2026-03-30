@@ -11,7 +11,6 @@ import lombok.SneakyThrows;
 import management.application.dto.task.CreateTaskRequestDto;
 import management.application.dto.task.TaskDto;
 import management.application.dto.task.UpdateTaskRequestDto;
-import management.application.model.Task;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,9 +26,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import static management.application.helper.TestDataHelper.createCreateTaskRequestDto;
+import static management.application.helper.TestDataHelper.createTaskDto;
+import static management.application.helper.TestDataHelper.createUpdateTaskRequestDto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -92,15 +97,9 @@ public class TaskControllerTest {
     @Test
     @DisplayName("get a task by id")
     public void getTaskById_success() throws Exception {
-        TaskDto expected = new TaskDto();
-        expected.setId(1L);
-        expected.setPriority(Task.Priority.LOW.name());
-        expected.setName("task");
-        expected.setDescription("description");
-        expected.setProjectId(1L);
-        expected.setAssigneeId(2L);
-        expected.setStatus(Task.Status.IN_PROGRESS.name());
-        expected.setDeadline(LocalDate.of(2026, 3, 21));
+        TaskDto expected = createTaskDto(1L, "task", "description",
+                "IN_PROGRESS", LocalDate.of(2026, 3, 21),
+                "LOW", 1L, 2L);
 
         MvcResult mvcResult = mockMvc
                 .perform(get("/tasks/{id}", 1L)
@@ -124,14 +123,8 @@ public class TaskControllerTest {
     @Test
     @DisplayName("create a task")
     public void createTask_success() throws Exception {
-        CreateTaskRequestDto requestDto = new CreateTaskRequestDto();
-        requestDto.setAssigneeId(2L);
-        requestDto.setProjectId(1L);
-        requestDto.setDescription("description");
-        requestDto.setName("task");
-        requestDto.setDeadline(LocalDate.now().plusMonths(1));
-        requestDto.setPriority(Task.Priority.LOW.name());
-        requestDto.setLabelsIds(Set.of(1L));
+        CreateTaskRequestDto requestDto = createCreateTaskRequestDto("task", "description",
+                LocalDate.now().plusMonths(1), "LOW", 1L, 2L, Set.of(1L));
 
         MvcResult mvcResult = mockMvc
                 .perform(post("/tasks")
@@ -155,9 +148,7 @@ public class TaskControllerTest {
     @Test
     @DisplayName("update a task by id")
     public void updateTask_success() throws Exception {
-        UpdateTaskRequestDto requestDto = new UpdateTaskRequestDto();
-        requestDto.setPriority(Task.Priority.HIGH.name());
-        requestDto.setStatus(Task.Status.IN_PROGRESS.name());
+        UpdateTaskRequestDto requestDto = createUpdateTaskRequestDto("IN_PROGRESS", "LOW");
 
         MvcResult mvcResult = mockMvc
                 .perform(put("/tasks/{id}", 1L)

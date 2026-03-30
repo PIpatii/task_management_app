@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto addComment(AddCommentRequestDto addCommentDto) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.getUserByEmail(username);
@@ -41,6 +43,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public void deleteComment(Long id) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.getUserByEmail(username);
