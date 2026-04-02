@@ -124,6 +124,7 @@ Files are not stored locally — only in Dropbox.
 This approach keeps the system lightweight and scalable.
 
 🧾 .env Example
+```
 dropbox.app-key=
 dropbox.app-secret=
 dropbox.refresh-token=
@@ -138,6 +139,8 @@ MYSQLDB_DOCKER_PORT=
 SPRING_LOCAL_PORT=
 SPRING_DOCKER_PORT=
 DEBUG_PORT=
+```
+
 
 🧩 MapStruct Integration
 Mapping between Entities and DTOs is handled by MapStruct, ensuring:
