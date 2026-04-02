@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-admin-to-users_roles-table
+      author: Petro
+      changes:
+        - insert:
+            tableName: users_roles
+            columns:
+              - column: {name: users_id, valueComputed: (SELECT id FROM users WHERE email = 'admin@mate.academy')}
+              - column: {name: roles_id, valueComputed: (SELECT id FROM roles WHERE name = 'ADMIN')}

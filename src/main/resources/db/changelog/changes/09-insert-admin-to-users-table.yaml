@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-admin-to-users-table
+      author: Petro
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: email, value: "admin@mate.academy" }
+              - column: { name: password, value: "$2a$10$duEFuKqhT34aILFFxJYP0eGjtsiYBBtCJ48floHAXahw7ju4oaEpO" }
+              - column: { name: first_name, value: "Petro" }
+              - column: { name: last_name, value: "Petro" }
+
