@@ -14,6 +14,7 @@ The API supports:
 
 ⚙️ Technologies & Tools
 | Category | Tools / Frameworks | 
+| --- | --- |
 | Core Framework | Spring Boot 3 | 
 | Security & Auth | Spring Security, JWT | 
 | Data Access | Spring Data JPA, Hibernate | 
@@ -32,6 +33,7 @@ The API supports:
 The system uses JWT tokens for authentication.
 Main Endpoints:
 |Endpoint | Method | Description | 
+| --- | --- | --- |
 | /auth/register | POST | Register a new user | 
 | /auth/login | POST | Log in and receive a JWT token | 
 
@@ -47,14 +49,14 @@ Roles:
 🧩 Main Features by Controller
 
 👤 AuthController
-| Endpoint | Method | Description | 
+| Endpoint | Method | Description |
+| --- | --- | --- |
 | /auth/register | POST | Register a new user | 
 | /auth/login | POST | Authenticate and retrieve JWT | 
 
-
-
 👥 UsersController
-| Endpoint | Method | Access | Description | 
+| Endpoint | Method | Access | Description |
+| --- | --- | --- | --- |
 | /users/{id}/role | PUT | ADMIN | Update user role | 
 | /users | GET | USER | Get current user profile | 
 | /users | PUT | USER | Update profile information | 
@@ -63,7 +65,8 @@ Roles:
 
 
 📁 ProjectController
-| Endpoint | Method | Access | Description | 
+| Endpoint | Method | Access | Description |
+| --- | --- | --- | --- |
 | /projects | POST | ADMIN | Create a new project | 
 | /projects | GET | USER | Retrieve user projects | 
 | /projects/{id} | GET | USER | Get project details | 
@@ -74,6 +77,7 @@ Roles:
 
 📝 TaskController
 | Endpoint | Method | Access | Description |
+| --- | --- | --- | --- |
 | /tasks | POST | ADMIN | Create a new task |
 | /tasks | GET | USER | Retrieve tasks for a project |
 | /tasks/{id} | GET | USER | Get task details |
@@ -84,6 +88,7 @@ Roles:
 
 💬 CommentController
 | Endpoint | Method | Access | Description |
+| --- | --- | --- | --- |
 | /comments | POST | USER | Add a comment to a task |
 | /comments?taskId={taskId} | GET | USER | Retrieve comments for a task |
 | /comments/{id} | DELETE | USER | Delete comment |
@@ -92,6 +97,7 @@ Roles:
 
 📎 AttachmentController (Dropbox Integration)
 | Endpoint | Method | Access | Description |
+| --- | --- | --- | --- |
 | /attachments | POST | ADMIN | Upload a file to Dropbox and save metadata |
 | /attachments?taskId={taskId} | GET | USER | Retrieve attachments for a task |
 | /attachments/{id}/download | GET | USER | Download file from Dropbox |
@@ -101,6 +107,7 @@ Roles:
 
 🏷 LabelController
 | Endpoint | Method | Access | Description |
+| --- | --- | --- | --- |
 | /labels | POST | ADMIN | Create a new label |
 | /labels | GET | USER | Retrieve labels |
 | /labels/{id} | PUT | ADMIN | Update label |
@@ -150,6 +157,7 @@ A global exception handler:
 
 🚧 Challenges & Solutions
 | Challenge | Solution | 
+| --- | --- |
 | Secure authentication | JWT + role-based access | 
 | File storage | Dropbox API | 
 | Validation | Jakarta Validation | 
